@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Weather Forecast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+    <style type="text/css">
+        .header{
+            display: flex;
+            width: 100%;
+            height: 100px;
+            background: #1E202B;
+        }
+        .header_tile{
+            width: 60%;
+            height: 100%;
+            line-height: 100px;
+            color: white;
+            font-size: 200%;
+            font-weight: bold;
+            font-family: arial;
+            padding: 0 0 0 2%;
+        }
+        .button{
+            color: #029ED9;
+            font-size: 120%;
+            font-family: arial;
+            background: transparent;
+            border: 2px solid #029ED9;
+            border-radius: 50px;
+            padding: 0 20px 0 20px;
+            margin: 0 20px 0 20px;
+        }
+        .button:hover{
+            color: white;
+            border-color: white;
+            background: #029ED9;
+        }
+        .middle{
+            width: 100%;
+            min-height: 1000px;
+            background: #1E202B;
+            padding: 50px;
+            background-image: url("https://wallpaperfm.com/img/original/b/7/2/59591.jpg");
+            background-repeat: no-repeat;
+            background-size: 1280px 400px;
+        }
+        .weather_chart{
+            display: flex;
+            height: 580px;
+            background: #4D5168;
+            border-radius: 10px;
+            color: white;
+            opacity: 0.8;
+        }
+        .weather_today{
+            width: 30%;
+            height: 100%;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            background: #0E1111;
+        }
+        .weather_today_title{
+            display: flex;
+            width: 100%;
+            height: 10%;
+            border-top-left-radius: 10px;
+            color: white;
+            font-size: 130%;
+            background: #353839;
+            opacity: 1.0;
+        }
+        .weather_today_temp{
+            width: 100%;
+            height: 30%;
+            background: none;
+        }
+        .weather_today_footer{
+            width: 100%;
+            height: 60%;
+        }
+
+        .weather_forecast{
+            display: flex;
+            width: 70%;
+            height: 100%;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .weather_forecast_single_day{
+            min-width: 20%;
+            min-height: 100%;
+        }
+        .weather_forecast_title{
+            width: 100%;
+            height: 10%;
+            font-size: 130%;
+            padding: 7px;
+            text-align: center; 
+            background: black;
+        }
+        .weather_forecast_temp{
+            width: 100%;
+            height: 30%;
+        }
+        .weather_forecast_footer{
+            width: 100%;
+            height: 60%;
+        }
+        table{
+            width: 100%;
+            height: 99%;
+            border: 1px solid #1E202B;
+            border-collapse: collapse;
+        }
+        tr,td{
+            padding: 10px;
+            border: 1px solid #1E202B;
+        }
+        table.forecast{
+            border: 1px solid #2B3131;
+        }
+        .forecast tr, .forecast td{
+            font-size: 90%;
+            border: 1px solid #2B3131;
+            padding: 4px;
+        }
+    </style>
+
+    <script>
+        function timeConverter(UNIX_timestamp){
+          var a = new Date(UNIX_timestamp * 1000);
+          var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          var year = a.getFullYear();
+          var month = months[a.getMonth()];
+          var date = a.getDate();
+          var hour = a.getHours();
+          var min = a.getMinutes();
+          var sec = a.getSeconds();
+          var time = date + ' ' + month + '   '/* + year + ' '*/ + hour + ':' + min/* + ':' + sec */;
+          return time;
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="header">
+        <i class="fa fa-cloud" style="font-size: 100px;color: #029ED9;"></i>
+        <div class="header_tile">
+            Weather Forecast & Improvement of Accuracy
+        </div>
+        <div class="button" style="position: relative; top: 50px;">Home</div>
+        <div class="button" style="position: relative; top: 50px;">About</div>
+    </div>
+    <div class="middle">
+        <div class="weather_chart">
+            <div class="weather_today">
+                <div class="weather_today_title">
+                    <p style="width: 50%; padding: 7px; text-align: left;">Today</p>
+                    <p style="width: 50%; padding: 7px; text-align: right;">
+                        {{weather_current.day}}.{{weather_current.month}}.{{weather_current.year}}
+                    </p>
+                </div>
+                <div class="weather_today_temp">
+                    <div style="font-size: 130%; padding: 20px 20px 0 20px;">
+                        {{weather_current.country}}
+                    </div>
+                    <p style="display: inline; font-size: 350%; font-weight: bold; color: #ffcf40; padding: 0 0 0 20px;">
+                        {{weather_current.temp}}&#8451;
+                        <img width="120px" src="http://openweathermap.org/img/w/{{ weather_current.icon }}.png">
+                    </p>
+                    <p style="position: relative; top: -45px; padding: 0 0 0 20px;">{{weather_current.description}}</p>
+                </div>
+                <div class="weather_today_footer">
+                    <table>
+                        <tr><td>Pressure</td><td>{{weather_current.pressure}} hpa</td></tr>
+                        <tr><td>Humidity</td><td>{{weather_current.humidity}} %</td></tr>
+                        <tr><td>Minimum Temperature</td><td>{{weather_current.temp_min}}&#8451;</td></tr>
+                        <tr><td>Maximum Temperature</td><td>{{weather_current.temp_max}}&#8451;</td></tr>
+                        <tr><td>Sea Level</td><td>{{weather_current.sea_level}}</td></tr>
+                        <tr><td>Ground Level</td><td>{{weather_current.grnd_level}}</td></tr>
+                        <tr><td>Wind</td><td>{{weather_current.speed}} Km/h<br>{{weather_current.deg}}°</td></tr>
+                        <tr><td>Geo Coordinate</td><td>[{{weather_current.lat}}, {{weather_current.lon}}]</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="weather_forecast">
+                <div class="weather_forecast_single_day" style="background: #394141">
+                    <div id="weather_forecast_title1" class="weather_forecast_title">Date
+                    </div>
+                    <div class="weather_forecast_temp">
+                        <div style="padding: 0 0 0 40px;">
+                            <img width="80px"src="http://openweathermap.org/img/w/{{ weather_forecast.icon.7 }}.png">
+                        </div>
+                        <div style="font-size: 250%; font-weight: bold; text-align: center;">
+                            {{weather_forecast.temp.7}}&#8451;
+                        </div>
+                        <div style="text-align: center;">
+                            {{weather_forecast.description.7}}
+                        </div>
+                    </div>
+                    <div class="weather_forecast_footer">
+                        <table class="forecast">
+                            <tr><td>pressure</td><td>{{weather_forecast.pressure.7}} hpa</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_min.7}}&#8451;</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_max.7}}&#8451;</td></tr>
+                            <tr><td>Sea Level</td><td>{{weather_forecast.sea_level.7}}</td></tr>
+                            <tr><td>Ground Level</td><td>{{weather_forecast.grnd_level.7}}</td></tr>
+                            <tr><td>Wind</td><td>{{weather_forecast.speed.7}}<br>Km/h<br>{{weather_forecast.deg.7}}°</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="weather_forecast_single_day" style="background: #303A3A">
+                    <div id="weather_forecast_title2" class="weather_forecast_title">Date
+                    </div>
+                    <div class="weather_forecast_temp">
+                        <div style="padding: 0 0 0 40px;">
+                            <img width="80px"src="http://openweathermap.org/img/w/{{ weather_forecast.icon.15 }}.png">
+                        </div>
+                        <div style="font-size: 250%; font-weight: bold; text-align: center;">
+                            {{weather_forecast.temp.15}}&#8451;
+                        </div>
+                        <div style="text-align: center;">
+                            {{weather_forecast.description.15}}
+                        </div>
+                    </div>
+                    <div class="weather_forecast_footer">
+                        <table class="forecast">
+                            <tr><td>pressure</td><td>{{weather_forecast.pressure.15}} hpa</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_min.15}}&#8451;</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_max.15}}&#8451;</td></tr>
+                            <tr><td>Sea Level</td><td>{{weather_forecast.sea_level.15}}</td></tr>
+                            <tr><td>Ground Level</td><td>{{weather_forecast.grnd_level.15}}</td></tr>
+                            <tr><td>Wind</td><td>{{weather_forecast.speed.15}}<br>Km/h<br>{{weather_forecast.deg.15}}°</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="weather_forecast_single_day" style="background: #394141">
+                    <div id="weather_forecast_title3" class="weather_forecast_title">Date
+                    </div>
+                    <div class="weather_forecast_temp">
+                        <div style="padding: 0 0 0 40px;">
+                            <img width="80px"src="http://openweathermap.org/img/w/{{ weather_forecast.icon.23 }}.png">
+                        </div>
+                        <div style="font-size: 250%; font-weight: bold; text-align: center;">
+                            {{weather_forecast.temp.23}}&#8451;
+                        </div>
+                        <div style="text-align: center;">
+                            {{weather_forecast.description.23}}
+                        </div>
+                    </div>
+                    <div class="weather_forecast_footer">
+                        <table class="forecast">
+                            <tr><td>pressure</td><td>{{weather_forecast.pressure.23}} hpa</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_min.23}}&#8451;</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_max.23}}&#8451;</td></tr>
+                            <tr><td>Sea Level</td><td>{{weather_forecast.sea_level.23}}</td></tr>
+                            <tr><td>Ground Level</td><td>{{weather_forecast.grnd_level.23}}</td></tr>
+                            <tr><td>Wind</td><td>{{weather_forecast.speed.23}}<br>Km/h<br>{{weather_forecast.deg.23}}°</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="weather_forecast_single_day" style="background: #303A3A">
+                    <div id="weather_forecast_title4" class="weather_forecast_title">Date
+                    </div>
+                    <div class="weather_forecast_temp">
+                        <div style="padding: 0 0 0 40px;">
+                            <img width="80px"src="http://openweathermap.org/img/w/{{ weather_forecast.icon.31 }}.png">
+                        </div>
+                        <div style="font-size: 250%; font-weight: bold; text-align: center;">
+                            {{weather_forecast.temp.31}}&#8451;
+                        </div>
+                        <div style="text-align: center;">
+                            {{weather_forecast.description.31}}
+                        </div>
+                    </div>
+                    <div class="weather_forecast_footer">
+                        <table class="forecast">
+                            <tr><td>pressure</td><td>{{weather_forecast.pressure.31}} hpa</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_min.31}}&#8451;</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_max.31}}&#8451;</td></tr>
+                            <tr><td>Sea Level</td><td>{{weather_forecast.sea_level.31}}</td></tr>
+                            <tr><td>Ground Level</td><td>{{weather_forecast.grnd_level.31}}</td></tr>
+                            <tr><td>Wind</td><td>{{weather_forecast.speed.31}}<br>Km/h<br>{{weather_forecast.deg.31}}°</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="weather_forecast_single_day" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px; background: #394141">
+                    <div id="weather_forecast_title5" class="weather_forecast_title" style="border-top-right-radius: 10px;">Date
+                    </div>
+                    <div class="weather_forecast_temp">
+                        <div style="padding: 0 0 0 40px;">
+                            <img width="80px"src="http://openweathermap.org/img/w/{{ weather_forecast.icon.39 }}.png">
+                        </div>
+                        <div style="font-size: 250%; font-weight: bold; text-align: center;">
+                            {{weather_forecast.temp.39}}&#8451;
+                        </div>
+                        <div style="text-align: center;">
+                            {{weather_forecast.description.39}}
+                        </div>
+                    </div>
+                    <div class="weather_forecast_footer" style="border-bottom-right-radius: 10px;">
+                        <table class="forecast">
+                            <tr><td>pressure</td><td>{{weather_forecast.pressure.39}} hpa</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_min.39}}&#8451;</td></tr>
+                            <tr><td>Minimum Temperature</td><td>{{weather_forecast.temp_max.39}}&#8451;</td></tr>
+                            <tr><td>Sea Level</td><td>{{weather_forecast.sea_level.39}}</td></tr>
+                            <tr><td>Ground Level</td><td>{{weather_forecast.grnd_level.39}}</td></tr>
+                            <tr><td>Wind</td><td>{{weather_forecast.speed.39}}<br>Km/h<br>{{weather_forecast.deg.39}}°</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="display: flex;">
+        <div style="display: block; padding: 10px 0 0 50px;">
+        <p style="color: orange; font-size: 150%;">Daily Forecast (OpenWeatherMap):</p>
+        <canvas id="my_chart_temp_daily" width="500" height="200" style="background: white; margin: 10px 0 0 0px;"></canvas></div>
+        <div style="display: block; padding: 10px 0 0 50px">
+        <p style="color: orange; font-size: 150%;">Daily Forecast (Gaussian naive Bayes):</p>
+        <canvas id="my_chart_temp_daily_gnb" width="500" height="200" style="background: white; margin: 10px 0 0 0;"></canvas></div>
+        </div>
+
+
+        <div style="display: flex;">
+        <div style="display: block; padding: 10px 0 0 50px;">
+        <p style="color: orange; font-size: 150%;">Daily Forecast (Decision Tree):</p>
+        <canvas id="my_chart_temp_daily_dtree" width="500" height="200" style="background: white; margin: 10px 0 0 0;"></canvas></div>
+        <div style="display: block; padding: 10px 0 0 50px">
+        <p style="color: orange; font-size: 150%;">Daily Forecast (Support Vector Machine):</p>
+        <canvas id="my_chart_temp_daily_svm" width="500" height="200" style="background: white; margin: 10px 0 0 0;"></canvas></div>
+        </div>
+
+        <div style="display: flex">
+        <div style="display: block;">
+        <p style="color: orange; font-size: 150%; padding: 10px;">Comparing:</p>
+        <canvas id="my_chart_temp_compare" width="700" height="300" style="background: white; margin: 10px 0 0 20px;"></canvas></div>
+        <div style="display: block;">
+        <p style="color: orange; font-size: 150%; padding: 20px 0 0 50px;">Accuracy Table:</p>
+        <table style="color: black; background: white; margin: 0 0 0 50px; text-align: center;">
+            <tr><th>Date</th><th>GNB</th><th>Decision Tree</th><th>SVM</th></tr>
+            <tr><td>{{custom_output.day_series.0}}-{{custom_output.month_series.0}}-2019</td>
+                <td>{{accuracy.gnb.0}}</td><td>{{accuracy.dtree.0}}</td><td>{{accuracy.svmc.0}}</td></tr>
+
+            <tr><td>{{custom_output.day_series.1}}-{{custom_output.month_series.1}}-2019</td>
+                <td>{{accuracy.gnb.1}}</td><td>{{accuracy.dtree.1}}</td><td>{{accuracy.svmc.1}}</td></tr>
+
+            <tr><td>{{custom_output.day_series.2}}-{{custom_output.month_series.2}}-2019</td>
+                <td>{{accuracy.gnb.2}}</td><td>{{accuracy.dtree.2}}</td><td>{{accuracy.svmc.2}}</td></tr>
+
+            <tr><td>{{custom_output.day_series.3}}-{{custom_output.month_series.3}}-2019</td>
+                <td>{{accuracy.gnb.3}}</td><td>{{accuracy.dtree.3}}</td><td>{{accuracy.svmc.3}}</td></tr>
+
+            <tr><td>{{custom_output.day_series.4}}-{{custom_output.month_series.4}}-2019</td>
+                <td>{{accuracy.gnb.4}}</td><td>{{accuracy.dtree.4}}</td><td>{{accuracy.svmc.4}}</td></tr>
+
+            <tr style="background: yellow"><td>Average Accuracy</td>
+                <td>{{accuracy.avg.0}}%</td><td>{{accuracy.avg.1}}%</td><td>{{accuracy.avg.2}}%</td></tr>
+        </table>
+        </div>
+        </div>
+
+        <p style="color: orange; font-size: 150%; padding: 20px;">Hourly Forecast:</p>
+        <canvas id="my_chart_temp_hourly" width="1100" height="400" style="background: white; margin: 10px 0 0 20px;"></canvas>
+    </div>
+
+    <script type="text/javascript">
+        document.getElementById("weather_forecast_title1").innerHTML = timeConverter({{weather_forecast.date.7}});
+        document.getElementById("weather_forecast_title2").innerHTML = timeConverter({{weather_forecast.date.15}});
+        document.getElementById("weather_forecast_title3").innerHTML = timeConverter({{weather_forecast.date.23}});
+        document.getElementById("weather_forecast_title4").innerHTML = timeConverter({{weather_forecast.date.31}});
+        document.getElementById("weather_forecast_title5").innerHTML = timeConverter({{weather_forecast.date.39}});
+        var months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        var label ={{weather_forecast.date}};
+        var data = {{weather_forecast.temp}};
+        for (var i = 0; i < 40; i++) {
+            label[i] = timeConverter(label[i]);
+        }
+
+        var ctx = document.getElementById('my_chart_temp_daily');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [timeConverter({{weather_forecast.date.7}}),
+                         timeConverter({{weather_forecast.date.15}}),
+                         timeConverter({{weather_forecast.date.23}}),
+                         timeConverter({{weather_forecast.date.31}}),
+                         timeConverter({{weather_forecast.date.39}})],
+                datasets: [{
+                    label: '°C',
+                    data: [{{weather_forecast.temp.7}},
+                           {{weather_forecast.temp.15}},
+                           {{weather_forecast.temp.23}},
+                           {{weather_forecast.temp.31}},
+                           {{weather_forecast.temp.39}}],
+                    backgroundColor: [
+                        'rgba(25, 118, 210, 0.2)',
+                        'rgba(191, 54, 12, 0.2)',
+                        'rgba(255, 200, 0, 0.2)',
+                        'rgba(27, 94, 32, 0.2)',
+                        'rgba(57, 73, 171, 0.2)',
+                        'rgba(106, 27, 154, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(25, 118, 210, 1)',
+                        'rgba(191, 54, 12, 1)',
+                        'rgba(255, 200, 0, 1)',
+                        'rgba(27, 94, 32, 1)',
+                        'rgba(57, 73, 171, 1)',
+                        'rgba(106, 27, 154, 1)',
+                    ],
+                    borderWidth: 3,
+                    fill : false,
+                    lineTension : 0.3
+                }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "blue"
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            fontColor: "brown",
+                            beginAtZero: false
+                        }
+                    }]
+                }
+            }
+        });
+
+        ctx = document.getElementById('my_chart_temp_daily_gnb');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{{custom_output.day_series.0}} + " " + months[{{custom_output.month_series.0}}],
+                         {{custom_output.day_series.1}} + " " + months[{{custom_output.month_series.1}}],
+                         {{custom_output.day_series.2}} + " " + months[{{custom_output.month_series.2}}],
+                         {{custom_output.day_series.3}} + " " + months[{{custom_output.month_series.3}}],
+                         {{custom_output.day_series.4}} + " " + months[{{custom_output.month_series.4}}]],
+                datasets: [{
+                    label: '°C',
+                    data: [{{custom_output.gnb_output.0}},
+                           {{custom_output.gnb_output.1}},
+                           {{custom_output.gnb_output.2}},
+                           {{custom_output.gnb_output.3}},
+                           {{custom_output.gnb_output.4}}],
+                    backgroundColor: [
+                        'rgba(0, 255, 0, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 0, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 2,
+                    fill : false,
+                    lineTension : 0.4
+                }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "black",
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            fontColor: "black",
+                        }
+                    }]
+                }
+            }
+        });
+
+        ctx = document.getElementById('my_chart_temp_daily_dtree');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{{custom_output.day_series.0}} + " " + months[{{custom_output.month_series.0}}],
+                         {{custom_output.day_series.1}} + " " + months[{{custom_output.month_series.1}}],
+                         {{custom_output.day_series.2}} + " " + months[{{custom_output.month_series.2}}],
+                         {{custom_output.day_series.3}} + " " + months[{{custom_output.month_series.3}}],
+                         {{custom_output.day_series.4}} + " " + months[{{custom_output.month_series.4}}]],
+                datasets: [{
+                    label: '°C',
+                    data: [{{custom_output.dtree_output.0}},
+                           {{custom_output.dtree_output.1}},
+                           {{custom_output.dtree_output.2}},
+                           {{custom_output.dtree_output.3}},
+                           {{custom_output.dtree_output.4}}],
+                    backgroundColor: [
+                        'rgba(255, 100, 0, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 100, 0, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 2,
+                    fill : false,
+                    lineTension : 0.4
+                }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "black",
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            fontColor: "black",
+                        }
+                    }]
+                }
+            }
+        });
+
+        ctx = document.getElementById('my_chart_temp_daily_svm');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{{custom_output.day_series.0}} + " " + months[{{custom_output.month_series.0}}],
+                         {{custom_output.day_series.1}} + " " + months[{{custom_output.month_series.1}}],
+                         {{custom_output.day_series.2}} + " " + months[{{custom_output.month_series.2}}],
+                         {{custom_output.day_series.3}} + " " + months[{{custom_output.month_series.3}}],
+                         {{custom_output.day_series.4}} + " " + months[{{custom_output.month_series.4}}]],
+                datasets: [{
+                    label: '°C',
+                    data: [{{custom_output.svmc_output.0}},
+                           {{custom_output.svmc_output.1}},
+                           {{custom_output.svmc_output.2}},
+                           {{custom_output.svmc_output.3}},
+                           {{custom_output.svmc_output.4}}],
+                    backgroundColor: [
+                        'rgba(0, 200, 200, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 200, 200, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 2,
+                    fill : false,
+                    lineTension : 0.4
+                }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "black",
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            fontColor: "black",
+                        }
+                    }]
+                }
+            }
+        });
+
+        ctx = document.getElementById('my_chart_temp_compare');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{{custom_output.day_series.0}} + " " + months[{{custom_output.month_series.0}}],
+                         {{custom_output.day_series.1}} + " " + months[{{custom_output.month_series.1}}],
+                         {{custom_output.day_series.2}} + " " + months[{{custom_output.month_series.2}}],
+                         {{custom_output.day_series.3}} + " " + months[{{custom_output.month_series.3}}],
+                         {{custom_output.day_series.4}} + " " + months[{{custom_output.month_series.4}}]],
+                datasets: [{
+                    label: '°C (OpenWeatherMap)',
+                    data: [{{weather_forecast.temp.7}},
+                           {{weather_forecast.temp.15}},
+                           {{weather_forecast.temp.23}},
+                           {{weather_forecast.temp.31}},
+                           {{weather_forecast.temp.39}}],
+                    backgroundColor: [
+                        'rgba(25, 118, 210, 0.2)',
+                        'rgba(191, 54, 12, 0.2)',
+                        'rgba(255, 200, 0, 0.2)',
+                        'rgba(27, 94, 32, 0.2)',
+                        'rgba(57, 73, 171, 0.2)',
+                        'rgba(106, 27, 154, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(25, 118, 210, 1)',
+                        'rgba(191, 54, 12, 1)',
+                        'rgba(255, 200, 0, 1)',
+                        'rgba(27, 94, 32, 1)',
+                        'rgba(57, 73, 171, 1)',
+                        'rgba(106, 27, 154, 1)',
+                    ],
+                    borderWidth: 3,
+                    fill : false,
+                    lineTension : 0.3
+                },
+                {
+                    label: '°C (Gaussian Naive Byes)',
+                    data: [{{custom_output.gnb_output.0}},
+                           {{custom_output.gnb_output.1}},
+                           {{custom_output.gnb_output.2}},
+                           {{custom_output.gnb_output.3}},
+                           {{custom_output.gnb_output.4}}],
+                    type: 'line',
+                    backgroundColor: [
+                        'rgba(0, 255, 0, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 0, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 4,
+                    fill : false,
+                    lineTension : 0.4
+                },
+                {
+                    label: '°C (Decision Tree)',
+                    type: 'line',
+                    data: [{{custom_output.dtree_output.0}},
+                           {{custom_output.dtree_output.1}},
+                           {{custom_output.dtree_output.2}},
+                           {{custom_output.dtree_output.3}},
+                           {{custom_output.dtree_output.4}}],
+                    backgroundColor: [
+                        'rgba(255, 100, 0, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 100, 0, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 5,
+                    fill : false,
+                    lineTension : 0.4
+                },
+                {
+                    label: '°C (Support Vector Machine)',
+                    type: 'line',
+                    data: [{{custom_output.svmc_output.0}},
+                           {{custom_output.svmc_output.1}},
+                           {{custom_output.svmc_output.2}},
+                           {{custom_output.svmc_output.3}},
+                           {{custom_output.svmc_output.4}}],
+                    backgroundColor: [
+                        'rgba(0, 200, 200, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor:[
+                        'rgba(0, 200, 200, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 6,
+                    fill : false,
+                    lineTension : 0.4
+                }
+                ]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "blue"
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            fontColor: "brown",
+                            beginAtZero: false
+                        }
+                    }]
+                }
+            }
+        });
+
+        ctx = document.getElementById('my_chart_temp_hourly');
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                datasets: [{
+                    label: '°C bar',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(250,128,114, 0.5)',
+                        'rgba(233,150,122, 0.5)', 'rgba(205,92,92, 0.5)', 'rgba(220,20,60, 0.5)',
+                        'rgba(255,0,0, 0.5)', 'rgba(255,218,185, 0.5)', 'rgba(238,232,170, 0.5)',
+                        'rgba(240,230,140, 0.5)', 'rgba(189,183,107, 0.5)', 'rgba(255,255,0, 0.5)',
+                        'rgba(50,205,50, 0.5)', 'rgba(0.255.0, 0.5)', 'rgba(34,139,34, 0.5)',
+                        'rgba(0,128,0, 0.5)', 'rgba(128,128,0, 0.5)', 'rgba(224,255,255, 0.5)',
+                        'rgba(0,255,255, 0.5)', 'rgba(127,255,212, 0.5)', 'rgba(102,205,170, 0.5)',
+                        'rgba(175,238,238, 0.5)', 'rgba(0,206,209, 0.5)', 'rgba(135,206,250, 0.5)',
+                        'rgba(0,191,255, 0.5)', 'rgba(30,144,255, 0.5)', 'rgba(100,149,237, 0.5)',
+                        'rgba(0,0,205, 0.5)', 'rgba(255,0,255, 0.5)', 'rgba(186,85,211, 0.5)',
+                        'rgba(147,112,219, 0.5)', 'rgba(138,43,226, 0.5)', 'rgba(148,0,211, 0.5)',
+                        'rgba(139,0,139, 0.5)', 'rgba(255,192,203, 0.5)', 'rgba(255,105,180, 0.5)',
+                        'rgba(219,112,147, 0.5)', 'rgba(199,21,133, 0.5)', 'rgba(255,20,147, 0.5)',
+                        'rgba(255,222,173, 0.5)', 'rgba(245,222,179, 0.5)', 'rgba(205,133,63, 0.5)',
+                    ],
+                    borderColor: [
+
+                    ],
+                    order: 1,
+                    borderWidth: 2,
+                    fill : true,
+                },
+                {
+                    label: '°C line',
+                    data: data,
+                    type: 'line',
+                    backgroundColor: [
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                    ],
+                    borderColor: [
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                        'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 'rgba(0, 0, 0, 1.0)', 
+                    ],
+                    order: 2,
+                    borderWidth: 2,
+                    fill : false,
+                    lineTension : 0.4
+                }],
+                labels: label,
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            fontColor: "black",
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            fontColor: "aqua",
+                        }
+                    }]
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>
